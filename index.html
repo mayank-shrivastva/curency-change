@@ -14,7 +14,8 @@ function showPosition(position) {
     const lon = position.coords.longitude;
 
     // Fetch country and currency using a free geolocation API (e.g., ip-api)
-    const geolocationAPI = `http://ip-api.com/json/`;
+    const geolocationAPI = `https://ip-api.com/json/`;
+
 
     fetch(geolocationAPI)
         .then(response => response.json())
