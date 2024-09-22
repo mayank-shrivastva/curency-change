@@ -1,39 +1,97 @@
-<p class="convert-amount" data-currency="EUR">100</p>
-<p class="convert-amount" data-currency="GBP">250</p>
-<p class="convert-amount" data-currency="INR">500</p>
 <script>
-    // Fetch exchange rates when the page loads
-    window.onload = function() {
-        const apiURL = "https://open.er-api.com/v6/latest/USD";
-
-        fetch(apiURL)
-            .then(response => response.json())
-            .then(data => {
-                if (data.result === "success") {
-                    const rates = data.rates;
-                    convertAmounts(rates);
-                } else {
-                    console.error("Failed to retrieve exchange rates.");
-                }
-            })
-            .catch(error => console.error("Error fetching exchange rates:", error));
-    };
-
-    // Function to convert all amounts
-    function convertAmounts(rates) {
-        // Get all elements containing amounts to convert (add your class or ID)
-        const amountElements = document.querySelectorAll('.convert-amount');
-
-        // Iterate through each element and convert the amount
-        amountElements.forEach(function(element) {
-            const originalAmount = parseFloat(element.innerText); // Get the original amount
-            const currency = element.getAttribute('data-currency'); // Get the target currency from the element's data attribute
-            if (rates[currency]) {
-                const convertedAmount = originalAmount * rates[currency]; // Convert the amount
-                element.innerText = convertedAmount.toFixed(2); // Update the text with converted amount
-            } else {
-                console.error("Currency not found:", currency);
-            }
-        });
+// Function to get user's current location
+function getUserLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        alert("Geolocation is not supported by this browser.");
     }
+}
+
+// Function to handle the user's location and fetch country/currency
+function showPosition(position) {
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    // Fetch country and currency using a free geolocation API (e.g., ip-api)
+    const geolocationAPI = `http://ip-api.com/json/`;
+
+    fetch(geolocationAPI)
+        .then(response => response.json())
+        .then(data => {
+            const country = data.country;
+            const currency = getCurrencyByCountry(data.countryCode);
+            document.getElementById("location").innerText = `Your location: ${country}`;
+            document.getElementById("currency-from-to").innerText = `USD to ${currency}`;
+
+            // Fetch the exchange rates and convert amount
+            fetchExchangeRates(currency);
+        })
+        .catch(error => console.error("Error fetching location:", error));
+}
+
+// Map country codes to currency codes
+function getCurrencyByCountry(countryCode) {
+    const countryCurrencyMap = {
+        "US": "USD",
+        "IN": "INR",
+        "GB": "GBP",
+        "CA": "CAD",
+        "JP": "JPY",
+        "EU": "EUR"
+        // Add more country-to-currency mappings as needed
+    };
+    return countryCurrencyMap[countryCode] || "USD"; // Default to USD if country is not mapped
+}
+
+// Fetch exchange rates and convert USD to local currency
+function fetchExchangeRates(currency) {
+    const apiURL = "https://open.er-api.com/v6/latest/USD";
+
+    fetch(apiURL)
+        .then(response => response.json())
+        .then(data => {
+            if (data.result === "success") {
+                const rates = data.rates;
+                const usdToLocalRate = rates[currency];
+                document.getElementById("exchange-rate").innerText = `Exchange Rate: 1 USD = ${usdToLocalRate} ${currency}`;
+
+                // Now convert a sample amount (e.g., 100 USD)
+                const convertedAmount = 100 * usdToLocalRate;
+                document.getElementById("converted-amount").innerText = `100 USD = ${convertedAmount.toFixed(2)} ${currency}`;
+            } else {
+                console.error("Failed to retrieve exchange rates.");
+            }
+        })
+        .catch(error => console.error("Error fetching exchange rates:", error));
+}
+
+// Handle errors in geolocation
+function showError(error) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            alert("User denied the request for Geolocation.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+            break;
+        case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+            break;
+        case error.UNKNOWN_ERROR:
+            alert("An unknown error occurred.");
+            break;
+    }
+}
+
+// Call the function to get user's location on page load
+window.onload = function() {
+    getUserLocation();
+};
 </script>
+
+<!-- HTML Structure -->
+<div id="location"></div>
+<div id="currency-from-to"></div>
+<div id="exchange-rate"></div>
+<div id="converted-amount"></div>
