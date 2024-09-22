@@ -1,0 +1,39 @@
+<p class="convert-amount" data-currency="EUR">100</p>
+<p class="convert-amount" data-currency="GBP">250</p>
+<p class="convert-amount" data-currency="INR">500</p>
+<script>
+    // Fetch exchange rates when the page loads
+    window.onload = function() {
+        const apiURL = "https://open.er-api.com/v6/latest/USD";
+
+        fetch(apiURL)
+            .then(response => response.json())
+            .then(data => {
+                if (data.result === "success") {
+                    const rates = data.rates;
+                    convertAmounts(rates);
+                } else {
+                    console.error("Failed to retrieve exchange rates.");
+                }
+            })
+            .catch(error => console.error("Error fetching exchange rates:", error));
+    };
+
+    // Function to convert all amounts
+    function convertAmounts(rates) {
+        // Get all elements containing amounts to convert (add your class or ID)
+        const amountElements = document.querySelectorAll('.convert-amount');
+
+        // Iterate through each element and convert the amount
+        amountElements.forEach(function(element) {
+            const originalAmount = parseFloat(element.innerText); // Get the original amount
+            const currency = element.getAttribute('data-currency'); // Get the target currency from the element's data attribute
+            if (rates[currency]) {
+                const convertedAmount = originalAmount * rates[currency]; // Convert the amount
+                element.innerText = convertedAmount.toFixed(2); // Update the text with converted amount
+            } else {
+                console.error("Currency not found:", currency);
+            }
+        });
+    }
+</script>
