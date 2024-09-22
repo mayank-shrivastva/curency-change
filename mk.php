@@ -37,8 +37,6 @@
 
         <label for="actualCost">Actual Cost (in your currency):</label>
         <input type="text" id="actualCost" readonly>
-
-        <button type="submit">Calculate Costs</button>
     </form>
 
     <script>
@@ -61,7 +59,6 @@
             fetch(geolocationAPI)
                 .then(response => response.json())
                 .then(data => {
-                    const country = data.country_name;
                     const currency = getCurrencyByCountry(data.country_code);
                     localCurrencySymbol = data.currency; // Get local currency symbol
                     fetchExchangeRates(currency);
@@ -118,12 +115,10 @@
             }
         }
 
-        // Calculate costs on form submission
-        document.getElementById("costForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-
-            const numServices = parseInt(document.getElementById("numServices").value);
-            const numPhotos = parseInt(document.getElementById("numPhotos").value);
+        // Calculate costs automatically
+        function calculateCosts() {
+            const numServices = parseInt(document.getElementById("numServices").value) || 0;
+            const numPhotos = parseInt(document.getElementById("numPhotos").value) || 0;
             const serviceCostINR = 4; // Cost per service in INR
 
             // Calculate primary cost in INR
@@ -139,7 +134,11 @@
 
             // Set actual cost to primary cost in local currency
             document.getElementById("actualCost").value = `${localCurrencySymbol}${primaryCostLocal.toFixed(2)}`;
-        });
+        }
+
+        // Add event listeners to input fields
+        document.getElementById("numServices").addEventListener("input", calculateCosts);
+        document.getElementById("numPhotos").addEventListener("input", calculateCosts);
 
         // Call the function to get user's location on page load
         window.onload = function() {
